@@ -82,6 +82,15 @@ const PagePost = () => {
 
     const highLightField = (turn: boolean) => (turn) ? styles.pagePost__highlightField : '';
 
+    let pdfLink = null
+
+    try{
+        pdfLink = JSON.parse(JSON.parse(data.linkPDF))[0]
+    } catch (e) {
+        pdfLink = data.linkPDF
+        console.log("link PDF is not valid")
+    }
+
 
     return (
         <>
@@ -272,7 +281,7 @@ const PagePost = () => {
                                             : (postType === TPostType.competition) ? 'Страница конкурса'
                                                 : 'Ссылка'
                                 }</a>}
-                                {data.linkPDF && <a href={data.linkPDF} rel="noopener noreferrer" target="_blank"
+                                {pdfLink && <a href={pdfLink} rel="noopener noreferrer" target="_blank"
                                                     className={styles.pagePost__link}>Прикрепленный файл</a>}
                             </div>
                             <div className={styles.pagePost__infoFooter}>
