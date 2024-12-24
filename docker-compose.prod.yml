@@ -50,6 +50,8 @@ services:
       dockerfile: ./docker/prod/parsers/Dockerfile
       context: ./
     restart: always
+    ports:
+      - '3333:3333'
     volumes:
       - ./parsers/src:/app/src
       - ./parsers/package.json:/app/package.json
