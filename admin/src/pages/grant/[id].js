@@ -80,8 +80,8 @@ const Page = () => {
         }));
     };
 
-    const handleUpdatedDataUser = () => {
-        mutation.mutate({id: grants[0].id, data: {
+    const handleUpdatedDataUser = async () => {
+        await mutation.mutateAsync({id: grants[0].id, data: {
             ...grantData,
                 directions: JSON.stringify(selectChips)
             }});

@@ -32,7 +32,10 @@ export const updateGrant = async (updateData) => {
     try {
         const res = await axios.patch(`${serverUrl}v1/grants`,
             {
-               ...updateData
+                data: {
+                    ...updateData.data,
+                    dateCreationPost: (new Date(updateData.data.dateCreationPost)).toISOString(),
+                }
             },{
             headers: defaultHeaders
         })
