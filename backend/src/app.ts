@@ -32,6 +32,7 @@ connect().then(async _ => {
 		credentials: true, //access-control-allow-credentials:true,
 		origins:[
 			"http://localhost:3000",
+			"http://109.172.6.235:3000"
 		],
 		exposedHeaders: 'Authorization',
 	};
