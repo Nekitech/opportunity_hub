@@ -80,6 +80,7 @@ services:
       - nginx_config:/etc/nginx/conf.d
     ports:
       - 80:80
+      - 443:443
     env_file:
       - .env
     build:
