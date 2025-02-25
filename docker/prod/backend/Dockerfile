@@ -12,4 +12,8 @@ RUN npm run build
 
 RUN npm run postBuild
 
-EXPOSE 3000
+COPY ./docker/prod/backend/entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

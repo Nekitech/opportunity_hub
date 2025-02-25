@@ -385,9 +385,20 @@ const set_parsers = async (prisma:PrismaClient)=>{
         }
     ]
 
+    const randomInteger = (min:number, max:number) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    let withCronTime = parsersParams.map(parser => {
+        return {
+            ...parser,
+            cronTime: `${randomInteger(0,59)} ${randomInteger(11,19)} * * *`
+        }
+    })
+
     try {
         await prisma.parsers.createMany({
-            data:parsersParams
+            data:withCronTime
         })
     } catch (e) {
         console.log(e);
