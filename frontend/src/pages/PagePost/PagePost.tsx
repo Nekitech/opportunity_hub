@@ -85,9 +85,9 @@ const PagePost = () => {
     let pdfLink = null
 
     try{
-        pdfLink = JSON.parse(JSON.parse(data.linkPDF))[0]
+        pdfLink = JSON.parse(JSON.parse(data.linkPDF))[0].replace(/^"|"$/g, '');
     } catch (e) {
-        pdfLink = data.linkPDF
+        pdfLink = data.linkPDF.replace(/^"|"$/g, '');
         console.log("link PDF is not valid")
     }
 

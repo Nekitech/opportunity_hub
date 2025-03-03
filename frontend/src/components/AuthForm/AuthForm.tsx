@@ -43,7 +43,7 @@ const AuthForm: FC<AuthFormProps> = () => {
 
     return (
         <form className={styles.authForm} data-testid="AuthForm" onSubmit={handleSubmit(onSubmit)}>
-            <h1 className={styles.authForm__title}>Система сбора данных</h1>
+            <h1 className={styles.authForm__title}>Автоматизированная система для поиска и агрегации информации о научных мероприятиях</h1>
             <h2 className={styles.authForm__typeForm}>Авторизация</h2>
             <div className={styles.authForm__inputs}>
                 <div className={styles.authForm__input}>
