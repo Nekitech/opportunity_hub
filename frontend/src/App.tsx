@@ -21,9 +21,7 @@ function App() {
                 <Route path={'/post'} element={<PagePost/>}/>
                 {/*<Route path={'/vacancies'} element={<PageVacancies/>}/>*/}
                 <Route path={'/internships'} element={<PageInternships/>}/>
-
             </Routes>
-
         </div>
     );
 }

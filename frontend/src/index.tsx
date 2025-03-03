@@ -1,10 +1,10 @@
-import React, {StrictMode} from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import {Provider} from "react-redux";
 import {store} from "./store/store";
-import {HashRouter} from "react-router-dom";
+import {BrowserRouter} from "react-router-dom";
 import {AuthConsumer, AuthProvider, StateType} from "./context/auth-context";
 
 
@@ -13,7 +13,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
         <Provider store={store}>
-            <HashRouter>
+            <BrowserRouter>
                 <AuthProvider>
                     <AuthConsumer>
                         {
@@ -23,7 +23,7 @@ root.render(
                         }
                     </AuthConsumer>
                 </AuthProvider>
-            </HashRouter>
+            </BrowserRouter>
         </Provider>
 );
 
