@@ -311,10 +311,12 @@ const parsePage = async (
                     console.log(data.directions)
 
 
-                    if (grant.dateCreationPost)
-                        try {
-                            data.dateCreationPost = new Date(grant.dateCreationPost)
-                        } catch (e) {}
+                    if (grant.dateCreationPost) {
+                        // см. коммент в ветке competition: Invalid Date не бросается, проверяем явно.
+                        const d = new Date(grant.dateCreationPost)
+                        if (!isNaN(d.getTime()))
+                            data.dateCreationPost = d
+                    }
 
                     data.directions = JSON.stringify(data.directions)
 
@@ -386,10 +388,13 @@ const parsePage = async (
                         data.directions = []
                     }
 
-                    if (competition.dateCreationPost)
-                        try {
-                            data.dateCreationPost = new Date(competition.dateCreationPost)
-                        } catch (e) {}
+                    if (competition.dateCreationPost) {
+                        // new Date() на нераспознанной строке (рус. дата "24 мая 2023") НЕ бросает,
+                        // а возвращает Invalid Date — Prisma такую отвергает. Проверяем явно.
+                        const d = new Date(competition.dateCreationPost)
+                        if (!isNaN(d.getTime()))
+                            data.dateCreationPost = d
+                    }
 
                     data.directions = JSON.stringify(data.directions)
 

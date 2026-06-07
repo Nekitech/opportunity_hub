@@ -174,7 +174,7 @@ usersRouter.patch(base_url, async (req:express.Request, res:express.Response) =>
 
     let data:any = {};
 
-    if (role_id !== undefined){
+    if (role_id !== undefined && role_id !== null){
         const role = await prisma.users_role.findFirst({
             where: {
                 id: role_id

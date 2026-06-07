@@ -50,6 +50,11 @@ docker_prod_up:
 docker_prod_down:
 	docker compose -f docker-compose.prod.yml down
 
-# первичная инициализация схемы БД в проде
+# первичная инициализация схемы БД в проде.
+# run --rm (а не exec): на первом деплое контейнер api в crash-loop (нет таблиц),
+# exec в него не зайдёт. Одноразовый контейнер от того же образа делает db push независимо.
 docker_prod_db_push:
-	docker compose -f docker-compose.prod.yml exec api sh -c "cd apps/api && npm run prisma:migrate:apply"
+	docker compose -f docker-compose.prod.yml run --rm api npm run prisma:migrate:apply
+
+docker_prod_seed:
+	docker compose -f docker-compose.prod.yml run --rm api npm run prisma:seed
