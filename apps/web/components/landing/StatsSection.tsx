@@ -23,7 +23,6 @@ const items = (s: SiteStats) => [
 export default function StatsSection({ stats }: Props) {
     return (
         <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500 py-20">
-            {/* Тонкая сетка-подложка */}
             <div className="bg-grid mask-fade pointer-events-none absolute inset-0 opacity-40" />
 
             <div className="relative mx-auto max-w-screen-xl px-6">
