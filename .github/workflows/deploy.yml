@@ -61,9 +61,11 @@ jobs:
         run: |
           echo "$GHCR_TOKEN" | ssh -o StrictHostKeyChecking=accept-new -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             "cd /srv/projects/opportunity_hub \
+             && (git rev-parse --is-inside-work-tree >/dev/null 2>&1 || git init -q) \
+             && (git remote get-url origin >/dev/null 2>&1 || git remote add origin https://github.com/Nekitech/opportunity_hub.git) \
              && git remote set-url origin https://github.com/Nekitech/opportunity_hub.git \
-             && git fetch origin main \
-             && git reset --hard FETCH_HEAD \
+             && git fetch -q origin main \
+             && git reset -q --hard FETCH_HEAD \
              && docker login ghcr.io -u '$GHCR_USER' --password-stdin \
              && docker compose -f docker-compose.prod.yml pull \
              && docker compose -f docker-compose.prod.yml up -d --wait postgres \
