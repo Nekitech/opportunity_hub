@@ -15,5 +15,6 @@ RUN cd apps/api && npm run build && npm run postBuild
 
 WORKDIR /workspace/apps/api
 ENV NODE_ENV=production
+ENV PORT=3000
 EXPOSE 3000
 CMD ["node", "dist/app.js"]
