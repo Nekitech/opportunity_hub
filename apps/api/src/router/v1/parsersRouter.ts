@@ -1,7 +1,8 @@
 import express, {Router} from "express";
 import prisma from "../../prisma/connect";
 import {check, validationResult} from "express-validator";
-import {addJob, deleteJob, updateJob} from "../../cron/parsing";
+import {CronTime} from "cron";
+import {addJob, deleteJob, updateJob, runParserNow} from "../../cron/parsing";
 import usersRouter from "./usersRouter";
 
 const parsersRouter = Router();
@@ -212,6 +213,58 @@ parsersRouter.get(baseUrl + "/stats", async (_req, res) => {
     } catch (e) {
         return res.status(500).json({ errors: [{ msg: "Ошибка получения статистики" }] });
     }
+});
+
+/**
+ * @api {post} /v1/parsers/cron/bulk Задать одинаковое cron-расписание всем парсерам
+ * body: { cronTime: string }
+ */
+parsersRouter.post(baseUrl + "/cron/bulk", async (req, res) => {
+    const cronTime = req.body?.cronTime;
+    if (!cronTime || typeof cronTime !== "string") {
+        return res.status(422).json({errors: [{msg: "Не указано cron-время"}]});
+    }
+    // Валидируем выражение тем же движком, что и сам cron.
+    try {
+        new CronTime(cronTime);
+    } catch {
+        return res.status(422).json({errors: [{msg: "Некорректное cron-выражение"}]});
+    }
+
+    const result = await prisma.parsers.updateMany({data: {cronTime}});
+
+    // Перерегистрировать задачи у включённых парсеров, чтобы новое время применилось без рестарта.
+    const enabled = await prisma.parsers.findMany({where: {isEnabled: true}});
+    for (const p of enabled) {
+        await updateJob(p.id);
+    }
+
+    return res.status(200).json({
+        message: `Cron-расписание обновлено у ${result.count} парсеров`,
+        count: result.count,
+    });
+});
+
+/**
+ * @api {post} /v1/parsers/run Запустить парсер немедленно (в обход cron)
+ * body: { id: number }
+ */
+parsersRouter.post(baseUrl + "/run", async (req, res) => {
+    const id = Number(req.body?.id);
+    if (!Number.isInteger(id)) {
+        return res.status(422).json({errors: [{msg: "Не указан id парсера"}]});
+    }
+
+    const parser = await prisma.parsers.findUnique({where: {id}});
+    if (!parser) {
+        return res.status(422).json({errors: [{msg: "Парсер не найден"}]});
+    }
+
+    // Fire-and-forget: парсинг может идти десятки секунд (внешние сайты, N страниц),
+    // не держим HTTP-запрос открытым. Ошибки логируются внутри parsePage.
+    runParserNow(id).catch((e) => console.error("runParserNow error:", e));
+
+    return res.status(202).json({message: `Парсинг «${parser.name}» запущен`});
 });
 
 export default parsersRouter;

@@ -127,6 +127,20 @@ export async function getParserStats(): Promise<ParserStatsResponse> {
   return data;
 }
 
+/** Запустить парсер немедленно, в обход cron. */
+export async function runParser(id: number): Promise<{ message?: string }> {
+  const { data } = await apiClient.post("/v1/parsers/run", { id });
+  return data;
+}
+
+/** Задать одинаковое cron-расписание всем парсерам сразу. */
+export async function setCronForAllParsers(
+  cronTime: string
+): Promise<{ message?: string; count?: number }> {
+  const { data } = await apiClient.post("/v1/parsers/cron/bulk", { cronTime });
+  return data;
+}
+
 /* ============================ settings ============================ */
 
 export async function getParsingSettings(): Promise<AppSettings> {

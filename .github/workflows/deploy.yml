@@ -60,8 +60,13 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "$GHCR_TOKEN" | ssh -o StrictHostKeyChecking=accept-new -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
-            "docker login ghcr.io -u '$GHCR_USER' --password-stdin \
-             && cd /srv/projects/opportunity_hub \
+            "cd /srv/projects/opportunity_hub \
+             && git remote set-url origin https://github.com/Nekitech/opportunity_hub.git \
+             && git fetch origin main \
+             && git reset --hard FETCH_HEAD \
+             && docker login ghcr.io -u '$GHCR_USER' --password-stdin \
              && docker compose -f docker-compose.prod.yml pull \
+             && docker compose -f docker-compose.prod.yml up -d --wait postgres \
+             && docker compose -f docker-compose.prod.yml run --rm api npm run prisma:migrate:apply \
              && docker compose -f docker-compose.prod.yml up -d \
              && docker image prune -f"

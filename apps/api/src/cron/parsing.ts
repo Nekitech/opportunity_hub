@@ -204,6 +204,27 @@ const parse = async (parserId:number) => {
 }
 
 /**
+ * Ручной запуск парсера «прямо сейчас» — из админки, в обход cron.
+ * В отличие от parse(): не требует зарегистрированной cron-задачи и НЕ проверяет
+ * рабочее окно (parsersWorkTimeStart/End) — пользователь явно жмёт «Запустить».
+ * parsePage сам глотает свои ошибки (.catch + лог в accessing_logs_warnings),
+ * поэтому одна упавшая страница не валит весь прогон.
+ */
+export async function runParserNow(parserId: number): Promise<boolean> {
+    const parser_data = await prisma.parsers.findFirst({ where: { id: parserId } });
+    if (!parser_data) {
+        console.log("runParserNow: parser not found " + parserId);
+        return false;
+    }
+    console.log("Manual run parsing " + parser_data.name);
+    const pages = parser_data.pagesToParse && parser_data.pagesToParse > 0 ? parser_data.pagesToParse : 1;
+    for (let page = 1; page <= pages; page++) {
+        await parsePage(parser_data, page);
+    }
+    return true;
+}
+
+/**
  * Парсинг конкретной страницы
  * И добавление в БД
  * @param parser

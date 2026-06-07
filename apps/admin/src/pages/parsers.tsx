@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { Pencil, Play } from "lucide-react";
 import { Layout as DashboardLayout } from "@/layouts/dashboard/layout";
 import { PageContainer, PageHeader } from "@/components/page-container";
 import { DataTable } from "@/components/data-table";
@@ -27,7 +27,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { extractApiError, getParsers, updateParser } from "@/lib/api";
+import {
+  extractApiError,
+  getParsers,
+  updateParser,
+  runParser,
+  setCronForAllParsers,
+} from "@/lib/api";
 import { qk } from "@/lib/query-keys";
 import type { Parser } from "@/types";
 
@@ -147,11 +153,84 @@ function ParserEditDialog({
   );
 }
 
+const bulkCronSchema = z.object({
+  cronTime: z.string().min(1, "Укажите cron-выражение"),
+});
+type BulkCronValues = z.infer<typeof bulkCronSchema>;
+
+function BulkCronDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const form = useForm<BulkCronValues>({
+    resolver: zodResolver(bulkCronSchema),
+    values: { cronTime: "0 0 * * *" },
+  });
+
+  const mutation = useMutation({
+    mutationFn: (values: BulkCronValues) =>
+      setCronForAllParsers(values.cronTime),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["parsers"] });
+      toast.success(data.message ?? "Расписание применено ко всем парсерам");
+      onClose();
+    },
+    onError: (err) => toast.error(extractApiError(err)),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cron-расписание для всех парсеров</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="cronTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cron-выражение</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0 0 * * *" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <p className="text-sm text-muted-foreground">
+              Перезапишет расписание у <span className="font-medium">всех</span>{" "}
+              парсеров. Включённые перепланируются сразу, без рестарта.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "Применение…" : "Применить ко всем"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const Page = () => {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [editing, setEditing] = useState<Parser | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const query = useQuery({
     queryKey: qk.parsers({ skip: page * pageSize, take: pageSize }),
@@ -164,6 +243,20 @@ const Page = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parsers"] });
       toast.success("Статус обновлён");
+    },
+    onError: (err) => toast.error(extractApiError(err)),
+  });
+
+  const runMutation = useMutation({
+    mutationFn: (id: number) => runParser(id),
+    onSuccess: (data) => {
+      toast.success(data.message ?? "Парсинг запущен");
+      // Парсинг идёт асинхронно на бэке — обновим список чуть позже,
+      // чтобы подтянуть свежий «Последний парсинг».
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["parsers"] });
+        queryClient.invalidateQueries({ queryKey: qk.parserStats() });
+      }, 4000);
     },
     onError: (err) => toast.error(extractApiError(err)),
   });
@@ -227,7 +320,17 @@ const Page = () => {
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => runMutation.mutate(row.original.id)}
+              aria-label="Запустить сейчас"
+              title="Запустить сейчас"
+            >
+              <Play className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -255,6 +358,11 @@ const Page = () => {
           title="Парсеры"
           description="Источники данных, их расписание и статус"
         />
+        <div className="mb-4 flex justify-end">
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            Cron для всех
+          </Button>
+        </div>
         <DataTable
           columns={columns}
           data={query.data?.parsers ?? []}
@@ -274,6 +382,7 @@ const Page = () => {
         />
       </PageContainer>
       <ParserEditDialog parser={editing} onClose={() => setEditing(null)} />
+      <BulkCronDialog open={bulkOpen} onClose={() => setBulkOpen(false)} />
     </>
   );
 };
