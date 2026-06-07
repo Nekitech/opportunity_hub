@@ -1,5 +1,17 @@
 {
-  "dependencies": {
-    "moment": "^2.29.4"
-  }
+    "name": "opportunity-hub",
+    "private": true,
+    "packageManager": "pnpm@10.24.0",
+    "scripts": {
+        "dev": "turbo dev",
+        "build": "turbo build",
+        "lint": "turbo lint",
+        "typecheck": "turbo typecheck",
+        "test": "turbo test",
+        "clean": "turbo clean && find . -name 'node_modules' -not -path '*/.git/*' -prune -exec rm -rf {} +"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.60.0",
+        "turbo": "^2.9.16"
+    }
 }

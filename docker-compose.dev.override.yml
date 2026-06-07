@@ -1,34 +1,31 @@
-version: '3'
-
 services:
-  admin:
-    image: node:16.19.1-alpine
-    volumes:
-      - ./admin:/app
-    ports:
-      - "8081:5000"
-    working_dir: /app
-    command:
-      - sh
-      - -c
-      - |
-        npm install
-        npm run dev
-    env_file:
-      - admin/.env
-
-  frontend:
+  web:
     build:
-      dockerfile: ./docker/prod/frontend/Dockerfile
+      dockerfile: ./docker/backend/Dockerfile   # reuses the pnpm image
       context: ./
     restart: always
     volumes:
-      - ./frontend/node_modules:/app/node_modules
-      - ./frontend/src:/app/src
+      - ./:/workspace
+      - web_node_modules:/workspace/node_modules
     ports:
-      - "80:3000"
+      - "3001:3001"
+    working_dir: /workspace
     command: >
-      sh -c " npm run start"
+      sh -c "CI=true pnpm install --filter @repo/web &&
+             cd apps/web && npm run dev"
+    env_file:
+      - apps/web/.env.local
+    environment:
+      API_URL: http://backend:3000
+    # Source hot-reload работает через bind mount (./:/workspace) + next dev.
+    # Watch здесь нужен только чтобы пересобрать контейнер при смене зависимостей,
+    # т.к. установка пакетов происходит в command при старте контейнера.
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/web/package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
 
   backend:
     build:
@@ -36,17 +33,28 @@ services:
       context: ./
     restart: always
     volumes:
-      - ./backend:/app
+      - ./:/workspace
+      - api_node_modules:/workspace/node_modules
     ports:
       - '3000:3000'
+    working_dir: /workspace
     command: >
-      sh -c " npm install && 
-            
-              npm run dev"
+      sh -c "CI=true pnpm install --filter @repo/api &&
+             cd apps/api && npx prisma generate &&
+             npm run dev"
     env_file:
-      - backend/.env
+      - apps/api/.env
     depends_on:
-      - mysql
+      postgres:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/api/package.json
+        - action: rebuild
+          path: ./apps/api/prisma/schema.prisma
+        - action: rebuild
+          path: ./pnpm-lock.yaml
 
   parsers:
     build:
@@ -54,44 +62,84 @@ services:
       context: ./
     restart: always
     volumes:
-      - ./parsers/src:/app/src
-      - ./parsers/package.json:/app/package.json
+      - ./:/workspace
+      - parsers_node_modules:/workspace/node_modules
+    ports:
+      - '3333:3333'
+    working_dir: /workspace
     command: >
-      sh -c " npm install &&  
-              npm run start"
+      sh -c "CI=true pnpm install --filter @repo/parsers &&
+             cd apps/parsers && npm run server"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/parsers/package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
 
-  mysql:
-    image: mysql:5.7
+  admin:
+    # Admin теперь в pnpm-воркспейсе (deps через workspace:*), поэтому собираем
+    # на pnpm-образе и ставим зависимости через pnpm (npm не понимает workspace:).
+    build:
+      dockerfile: ./docker/backend/Dockerfile   # reuses the pnpm image
+      context: ./
     restart: always
     volumes:
-      - ./docker/mysql:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
-  pma:
-    image: phpmyadmin/phpmyadmin
-    restart: always
+      - ./:/workspace
+      - admin_node_modules:/workspace/node_modules
+      # Анонимные тома: per-package node_modules (pnpm-симлинки) и .next держим
+      # внутри контейнера, чтобы хостовые артефакты не конфликтовали с install.
+      - /workspace/apps/admin/node_modules
+      - /workspace/apps/admin/.next
     ports:
-      - '8080:80'
+      - "8081:5000"
+    working_dir: /workspace
+    command: >
+      sh -c "CI=true pnpm install --filter @repo/admin &&
+             cd apps/admin && npm run dev"
+    env_file:
+      - apps/admin/.env
+    # Source hot-reload — через bind mount (./:/workspace) + next dev.
+    # Watch пересобирает контейнер при смене зависимостей.
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/admin/package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+
+  postgres:
+    image: postgres:16
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     environment:
-      PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    depends_on:
-      - mysql
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
     volumes:
       - nginx_config:/etc/nginx/conf.d
     ports:
-      - 80:80
+      - "80:80"
     env_file:
       - .env
     build:
       context: ./nginx
       dockerfile: docker/Dockerfile
+
+volumes:
+  web_node_modules:
+  api_node_modules:
+  parsers_node_modules:
+  admin_node_modules:
+  nginx_config:
+  pgdata:

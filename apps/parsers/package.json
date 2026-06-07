@@ -1,0 +1,37 @@
+{
+    "name": "@repo/parsers",
+    "version": "1.0.0",
+    "main": "index.js",
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "dependencies": {
+        "@types/jsdom": "^21.1.7",
+        "@types/needle": "^3.3.0",
+        "axios": "^1.16.1",
+        "cheerio": "^1.2.0",
+        "dotenv": "^16.6.1",
+        "express": "^5.0.0",
+        "jsdom": "^26.1.0",
+        "needle": "^3.5.0",
+        "node-fetch": "^2.7.0",
+        "puppeteer": "^25.0.0"
+    },
+    "scripts": {
+        "test": "jest",
+        "server": "nodemon src/app.ts --watch ./**/**.ts",
+        "start": "node dist/app.js",
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.0.0",
+        "@repo/config": "workspace:*",
+        "concurrently": "^9.0.0",
+        "jest": "^29.7.0",
+        "nodemon": "^3.1.14",
+        "ts-jest": "^29.4.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.0.0"
+    }
+}

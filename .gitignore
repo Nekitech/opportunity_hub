@@ -8,3 +8,32 @@
 *.local
 ./release.tar.gz
 .env
+.env.prod
+
+# pnpm
+.pnpm-store/
+pnpm-debug.log
+
+# Turborepo
+.turbo/
+
+# Next.js
+**/.next/
+
+# test coverage
+**/coverage/
+
+# legacy MySQL bind-mount data (migrated to Postgres named volume) + db dumps
+docker/mysql/
+dump.sql
+
+CLAUDE.md
+
+docs/
+
+.claude
+
+# documentation (root + internal package docs; no leading slash → matches any level)
+README.md
+readme.md
+CHANGELOG.md

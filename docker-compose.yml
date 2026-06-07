@@ -1,30 +1,18 @@
-version: '3'
-
+# Базовый compose = merge-база для dev (дополняется docker-compose.dev.override.yml).
+# Прод-деплой использует отдельный docker-compose.prod.yml. web в прод уезжает на
+# Vercel, поэтому здесь его нет (в dev он добавляется override'ом).
 services:
-  frontend:
-    build:
-      dockerfile: ./docker/prod/frontend/Dockerfile
-      context: ./
-    restart: always
-    command: >
-      sh -c " npm install &&  
-              npm i serve -g &&
-              serve -s build"
-
   admin:
     build:
-      dockerfile: ./docker/prod/admin/Dockerfile
+      dockerfile: ./apps/admin/Dockerfile
       context: ./
     restart: always
     ports:
       - "8081:5000"
-    command: >
-      sh -c "npm install &&  
-                npm run start"
 
   backend:
     build:
-      dockerfile: ./docker/prod/backend/Dockerfile
+      dockerfile: ./apps/api/Dockerfile
       context: ./
     restart: always
     ports:
@@ -32,48 +20,26 @@ services:
     env_file:
       - .env
     depends_on:
-      - mysql
+      - postgres
 
   parsers:
     build:
-      dockerfile: ./docker/prod/parsers/Dockerfile
+      dockerfile: ./apps/parsers/Dockerfile
       context: ./
     restart: always
     ports:
       - '3333:3333'
-    volumes:
-      - ./parsers/src:/app/src
-      - ./parsers/package.json:/app/package.json
-    command: >
-      sh -c " npm install &&  
-              npm run start"
 
 
-  mysql:
-    image: mysql:5.7
+  postgres:
+    image: postgres:16
     restart: always
     volumes:
-      - mysql:/var/lib/mysql
+      - pgdata:/var/lib/postgresql/data
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
-  pma:
-    image: phpmyadmin/phpmyadmin
-    restart: always
-    ports:
-      - '8080:80'
-    environment:
-      PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    depends_on:
-      - mysql
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   nginx:
     volumes:
@@ -89,4 +55,4 @@ services:
 
 volumes:
   nginx_config:
-  mysql:
+  pgdata:

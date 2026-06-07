@@ -1,0 +1,58 @@
+# Прод-стек на VPS nekado.dev. web НЕ здесь — он на Vercel.
+# Образы тянутся из ghcr.io (собираются GitHub Actions). На сервере нужен .env.prod
+# (см. .env.prod.example) рядом с этим файлом.
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Все порты слушают только 127.0.0.1 — наружу проксирует nginx на хосте
+# (api.opportunity.nekado.dev -> :3001, admin.opportunity.nekado.dev -> :3002).
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    env_file:
+      - .env.prod
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # $$ — литеральный $ в рантайме: читаем POSTGRES_USER из env контейнера.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ghcr.io/nekitech/opportunity-hub-api:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    env_file:
+      - .env.prod
+    environment:
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  admin:
+    image: ghcr.io/nekitech/opportunity-hub-admin:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:5000"
+    env_file:
+      - .env.prod
+
+  parsers:
+    image: ghcr.io/nekitech/opportunity-hub-parsers:latest
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    # порт наружу не нужен — api ходит к парсерам по внутренней сети (PARSERS_URL=http://parsers:3333)
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

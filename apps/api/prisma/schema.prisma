@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x"]
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model grants {
+  id                Int       @id @unique @default(autoincrement())
+  namePost          String
+  dateCreationPost  DateTime?
+  directions        String?
+  organization      String?
+  deadline          DateTime?
+  summary           String?
+  directionForSpent String?
+  fullText          String?
+  link              String?
+  linkPDF           String?
+  sourceLink        String?
+  timeOfParse       DateTime?
+  blackListed       Boolean   @default(false)
+  parser            parsers?  @relation(fields: [parser_id], references: [id], onDelete: Cascade)
+  parser_id         Int?
+}
+
+model competitions {
+  id               Int       @id @unique @default(autoincrement())
+  namePost         String    @db.VarChar(255)
+  dateCreationPost DateTime?
+  directions       String?
+  summary          String?
+  organization     String?
+  deadline         DateTime?
+  fullText         String?
+  link             String?
+  linkPDF          String?
+  sourceLink       String?
+  timeOfParse      DateTime?
+  blackListed      Boolean   @default(false)
+  parser           parsers?  @relation(fields: [parser_id], references: [id], onDelete: Cascade)
+  parser_id        Int?
+}
+
+model internships {
+  id               Int       @id @unique @default(autoincrement())
+  namePost         String    @db.VarChar(255)
+  dateCreationPost DateTime?
+  directions       String?
+  responsibilities String?
+  organization     String?
+  fullText         String?
+  link             String?
+  linkPDF          String?
+  sourceLink       String?
+  timeOfParse      DateTime?
+  blackListed      Boolean   @default(false)
+  parser           parsers?  @relation(fields: [parser_id], references: [id], onDelete: Cascade)
+  parser_id        Int?
+}
+
+model vacancies {
+  id               Int       @id @unique @default(autoincrement())
+  namePost         String    @db.VarChar(255)
+  dateCreationPost DateTime?
+  directions       String?
+  organization     String?
+  salary           String?
+  responsibilities String?
+  fullText         String?
+  link             String?
+  linkPDF          String?
+  sourceLink       String?
+  timeOfParse      DateTime?
+  blackListed      Boolean   @default(false)
+  parser           parsers?  @relation(fields: [parser_id], references: [id], onDelete: Cascade)
+  parser_id        Int?
+}
+
+model users {
+  id           Int             @id @unique @default(autoincrement())
+  name         String          @unique
+  email        String
+  password     String
+  role         users_role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId       Int
+  blocked      Boolean         @default(false)
+  acessing_log acessing_logs[]
+
+  User_telegram_settings   users_telegram_settings? @relation(fields: [user_telegram_settingsId], references: [id], onDelete: Cascade)
+  user_telegram_settingsId Int?
+
+  users_telegramsId      String?
+  accessing_logs_warnigs accessing_logs_warnings[]
+}
+
+model users_telegram_settings {
+  id            Int      @id @unique @default(autoincrement())
+  workTimeStart DateTime
+  workTimeEnd   DateTime
+  users         users[]
+  directions    String? @db.VarChar(400)
+}
+
+model acessing_logs {
+  id     Int      @id @unique @default(autoincrement())
+  ip     String
+  date   DateTime
+  User   users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  method String
+  path   String
+  userId Int?
+}
+
+model users_role {
+  id               Int                @id @unique @default(autoincrement())
+  name             String             @unique
+  User             users[]
+  resources_access resources_access[]
+}
+
+enum users_actions_types {
+  LOGIN
+  LOGOUT
+  VISITPAGE
+  SENDREQUEST
+  CHANGE_PASSWORD
+  CHANGE_ROLE
+  CHANGE_WORKTIME
+  CHANGE_GRANTS_DIRECTIONS
+  CHANGE_COMPETITIONS_DIRECTIONS
+  CHANGE
+  BLOCK
+  UNBLOCK
+  EDIT
+}
+
+model whitelist {
+  id     Int    @id @unique @default(autoincrement())
+  origin String @unique
+}
+
+model resources_access {
+  id     Int         @id @unique @default(autoincrement())
+  path   String
+  method String      @default("*")
+  role   users_role? @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId Int?
+}
+
+model parsers {
+  id               Int             @id @unique @default(autoincrement())
+  name             String @unique
+  description      String?
+  isEnabled        Boolean
+  grant            grants[]
+  competition      competitions[]
+  parsing_queue    parsing_queue[]
+  pagesToParse     Int
+  cronTime         String?
+  lastSuccessAdd   DateTime?
+  lastSuccessParse DateTime?
+  internships      internships[]
+  vacancies        vacancies[]
+}
+
+model parsing_queue {
+  id        Int      @id @unique @default(autoincrement())
+  parser    parsers? @relation(fields: [parser_id], references: [id], onDelete: Cascade)
+  parser_id Int
+  page      Int
+}
+
+model appSettings {
+  id                   Int      @id @unique @default(autoincrement())
+  parsersWorkTimeStart DateTime
+  parsersWorkTimeEnd   DateTime
+}
+
+model telegram_commands {
+  id    Int      @id @unique @default(autoincrement())
+  query String   @db.VarChar(255)
+  TTL   DateTime
+}
+
+model accessing_logs_warnings {
+  id          Int      @id @unique @default(autoincrement())
+  user        users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int?
+  date        DateTime
+  description String
+  type        String
+  isSolved    Boolean  @default(false)
+}

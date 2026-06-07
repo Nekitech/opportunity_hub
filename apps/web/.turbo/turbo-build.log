@@ -1,0 +1,31 @@
+
+> @repo/web@0.1.0 build /home/nekitech/projects/opportunity_hub/apps/web
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.3s
+  Running TypeScript ...
+  Finished TypeScript in 4.2s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/5) ...
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+  Generating static pages using 7 workers (1/5) 
+  Generating static pages using 7 workers (2/5) 
+  Generating static pages using 7 workers (3/5) 
+✓ Generating static pages using 7 workers (5/5) in 376ms
+  Finalizing page optimization ...
+
+Route (app)        Revalidate  Expire
+┌ ○ /                      1h      1y
+├ ○ /_not-found
+├ ○ /calendar             30m      1y
+├ ○ /catalog
+└ ƒ /catalog/[id]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

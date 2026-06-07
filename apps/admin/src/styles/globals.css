@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  shadcn/ui токены (HSL, через пробел). Светлая тема настроена под sky/slate:
+  primary = sky-600, ring = sky-600, нейтрали — slate. .dark оставлен на будущее.
+*/
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 47% 11%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 47% 11%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 47% 11%;
+
+        --primary: 200 98% 39%;
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+
+        --accent: 204 94% 94%;
+        --accent-foreground: 200 98% 30%;
+
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+
+        --success: 142 71% 45%;
+        --success-foreground: 0 0% 100%;
+
+        --warning: 38 92% 50%;
+        --warning-foreground: 0 0% 100%;
+
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 200 98% 39%;
+
+        --radius: 0.65rem;
+
+        --chart-1: 200 98% 39%;
+        --chart-2: 217 91% 60%;
+        --chart-3: 262 83% 58%;
+        --chart-4: 142 71% 45%;
+        --chart-5: 38 92% 50%;
+
+        --sidebar: 222.2 47% 11%;
+        --sidebar-foreground: 240 5.3% 26.1%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-accent: 240 4.8% 95.9%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+        --sidebar-background: 0 0% 98%;
+        --sidebar-primary: 240 5.9% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+    }
+
+    .dark {
+        --background: 222.2 47% 6%;
+        --foreground: 210 40% 96%;
+        --card: 222.2 47% 8%;
+        --card-foreground: 210 40% 96%;
+        --popover: 222.2 47% 8%;
+        --popover-foreground: 210 40% 96%;
+        --primary: 200 98% 48%;
+        --primary-foreground: 222.2 47% 6%;
+        --secondary: 217 33% 17%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 217 33% 17%;
+        --muted-foreground: 215 20% 65%;
+        --accent: 217 33% 17%;
+        --accent-foreground: 210 40% 96%;
+        --destructive: 0 62% 50%;
+        --destructive-foreground: 210 40% 96%;
+        --success: 142 71% 45%;
+        --success-foreground: 0 0% 100%;
+        --warning: 38 92% 50%;
+        --warning-foreground: 0 0% 100%;
+        --border: 217 33% 20%;
+        --input: 217 33% 20%;
+        --ring: 200 98% 48%;
+        --sidebar-background: 240 5.9% 10%;
+        --sidebar-foreground: 240 4.8% 95.9%;
+        --sidebar-primary: 224.3 76.3% 48%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 240 3.7% 15.9%;
+        --sidebar-accent-foreground: 240 4.8% 95.9%;
+        --sidebar-border: 240 3.7% 15.9%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}
