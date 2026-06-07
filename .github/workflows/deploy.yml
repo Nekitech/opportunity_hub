@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ lower(github.repository_owner) }}/opportunity-hub
+  IMAGE_PREFIX: ghcr.io/nekitech/opportunity-hub
 
 jobs:
   build-and-push:
